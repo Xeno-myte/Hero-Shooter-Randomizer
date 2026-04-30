@@ -12,11 +12,14 @@ int tank = 1;
 int dps = 1;
 int supp = 1;
 
+std::string answer;
 int number;
 int characters;
 
 std::cout << "Welcome to the Randomizer" << '\n';
 Sleep(2000);
+
+while(true){
 
 std::cout << "Pick a number for the role you want randomized" << '\n' << '\n' << "1. Tank | 2. DPS | 3. Support" << '\n' << '\n';
 std::cin >> number;
@@ -31,18 +34,24 @@ std::cin >> characters;
 if(number == 1){
     srand(time(NULL));
     tank = (rand() % characters) + 1;
-    std::cout << "Your chosen tank is #: " << tank;
+    std::cout << "Your chosen tank is #: " << tank << '\n';
 } else if(number == 2){
     srand(time(NULL));
     dps = (rand() % characters) + 1;
-    std::cout << "Your chosen dps is #: " << dps;
+    std::cout << "Your chosen dps is #: " << dps << '\n';
 } else if(number == 3){
     srand(time(NULL));
     supp = (rand() % characters) + 1;
     std::cout << "Your chosen support is #: " << supp << '\n';
 }
 
+std::cout << '\n' << "Next random character?" << '\n' << "Yes or no?";
+std::cin >> answer;
 
+if(answer == "no"){
+    break; 
+}
+}
 
-system("pause");
+return 0;
 }
