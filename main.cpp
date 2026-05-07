@@ -1,10 +1,19 @@
 #include <iostream>
 #include <ctime>
-#include<windows.h>
+#include <windows.h>
+#include <algorithm> 
+#include <random>  
+#include <iterator>
+#include "imgui.h"
+#include "imgui_impl_dx9.h"
+#include "imgui_impl_win32.h"
+#include <d3d9.h>
+#include <tchar.h>
+#include <misc/cpp/imgui_stdlib.h>
 
 void sup();
 void DPS();
-void tank1();
+void tank();
 
 void apex();
 
@@ -13,509 +22,722 @@ void duelist();
 void strategist();
 
 
-int main() {
+void clickyclacky();
+
+ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
-srand(time(NULL));
-int name;
-std::string answer;
+// Data
+static LPDIRECT3D9              g_pD3D = nullptr;
+static LPDIRECT3DDEVICE9        g_pd3dDevice = nullptr;
+static bool                     g_DeviceLost = false;
+static UINT                     g_ResizeWidth = 0, g_ResizeHeight = 0;
+static D3DPRESENT_PARAMETERS    g_d3dpp = {};
 
-std::cout << "Welcome to the Randomizer" << '\n';
+// Forward declarations of helper functions
+bool CreateDeviceD3D(HWND hWnd);
+void CleanupDeviceD3D();
+void ResetDevice();
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-Sleep(500);
+// Main code
+int main(int, char**)
+{
+	// Make process DPI aware and obtain main monitor scale
+	ImGui_ImplWin32_EnableDpiAwareness();
+	float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
 
-while(true){
-std::cout << "Which game are you playing?" << '\n';
-std::cout << "1. Overwatch | 2. Apex Legends | 3. Marvel Rivals" << '\n';
-std::cin >> name;
-std::cout << '\n';
+	// Create application window
+	WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
+	::RegisterClassExW(&wc);
+	HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX9 Example", WS_OVERLAPPEDWINDOW, 100, 100, (int)(1280 * main_scale), (int)(800 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
 
-if(name == 1){
+	// Initialize Direct3D
+	if (!CreateDeviceD3D(hwnd))
+	{
+		CleanupDeviceD3D();
+		::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+		return 1;
+	}
 
-    std::string answer;
-    int number;
+	// Show the window
+	::ShowWindow(hwnd, SW_SHOWDEFAULT);
+	::UpdateWindow(hwnd);
 
-    while(true){
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-    std::cout << "Pick a number for the role you want randomized" << '\n' << '\n' << "1. Tank | 2. DPS | 3. Support" << '\n' << '\n';
-    std::cin >> number;
-    
-    if(number == 1){
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	//ImGui::StyleColorsLight();
 
-        tank1();
+	// Setup scaling
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+	style.FontScaleDpi = main_scale;        // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true automatically overrides this for every window depending on the current monitor)
 
-    } else if(number == 2){
+	// Setup Platform/Renderer backends
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX9_Init(g_pd3dDevice);
 
-        DPS();
+	// Load Fonts
+	// - If fonts are not explicitly loaded, Dear ImGui will select an embedded font: either AddFontDefaultVector() or AddFontDefaultBitmap().
+	//   This selection is based on (style.FontSizeBase * style.FontScaleMain * style.FontScaleDpi) reaching a small threshold.
+	// - You can load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
+	// - If a file cannot be loaded, AddFont functions will return a nullptr. Please handle those errors in your code (e.g. use an assertion, display an error and quit).
+	// - Read 'docs/FONTS.md' for more instructions and details.
+	// - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use FreeType for higher quality font rendering.
+	// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
+	//style.FontSizeBase = 20.0f;
+	//io.Fonts->AddFontDefaultVector();
+	//io.Fonts->AddFontDefaultBitmap();
+	//io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf");
+	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf");
+	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf");
+	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf");
+	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf");
+	//IM_ASSERT(font != nullptr);
 
-    }else if(number == 3){
-        sup();
-    }
-    
-    std::cout << '\n' << "Next random character?" << '\n' << "Yes or no?";
-    std::cin >> answer;
 
-    if(answer == "no"){
-        break; 
-    }
-  }
+
+	// Main loop
+	bool done = false;
+	while (!done)
+	{
+		// Poll and handle messages (inputs, window resize, etc.)
+		// See the WndProc() function below for our to dispatch events to the Win32 backend.
+		MSG msg;
+		while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+		{
+			::TranslateMessage(&msg);
+			::DispatchMessage(&msg);
+			if (msg.message == WM_QUIT)
+				done = true;
+		}
+		if (done)
+			break;
+
+		// Handle lost D3D9 device
+		if (g_DeviceLost)
+		{
+			HRESULT hr = g_pd3dDevice->TestCooperativeLevel();
+			if (hr == D3DERR_DEVICELOST)
+			{
+				::Sleep(10);
+				continue;
+			}
+			if (hr == D3DERR_DEVICENOTRESET)
+				ResetDevice();
+			g_DeviceLost = false;
+		}
+
+		// Handle window resize (we don't resize directly in the WM_SIZE handler)
+		if (g_ResizeWidth != 0 && g_ResizeHeight != 0)
+		{
+			g_d3dpp.BackBufferWidth = g_ResizeWidth;
+			g_d3dpp.BackBufferHeight = g_ResizeHeight;
+			g_ResizeWidth = g_ResizeHeight = 0;
+			ResetDevice();
+		}
+
+		// Start the Dear ImGui frame
+		ImGui_ImplDX9_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+		// PLACE ALL FUNCTIONS HERE:
+
+		clickyclacky();
+
+
+		// NOT BELOW HERE:
+		// Rendering
+		ImGui::EndFrame();
+		g_pd3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
+		g_pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+		g_pd3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+		D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_color.x * clear_color.w * 255.0f), (int)(clear_color.y * clear_color.w * 255.0f), (int)(clear_color.z * clear_color.w * 255.0f), (int)(clear_color.w * 255.0f));
+		g_pd3dDevice->Clear(0, nullptr, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, clear_col_dx, 1.0f, 0);
+		if (g_pd3dDevice->BeginScene() >= 0)
+		{
+			ImGui::Render();
+			ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
+			g_pd3dDevice->EndScene();
+		}
+		HRESULT result = g_pd3dDevice->Present(nullptr, nullptr, nullptr, nullptr);
+		if (result == D3DERR_DEVICELOST)
+			g_DeviceLost = true;
+	}
+
+	// Cleanup
+	ImGui_ImplDX9_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+	CleanupDeviceD3D();
+	::DestroyWindow(hwnd);
+	::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+	return 0;
 }
 
-if(name == 2){
+// Helper functions
 
-    apex();
+bool CreateDeviceD3D(HWND hWnd)
+{
+	if ((g_pD3D = Direct3DCreate9(D3D_SDK_VERSION)) == nullptr)
+		return false;
 
+	// Create the D3DDevice
+	ZeroMemory(&g_d3dpp, sizeof(g_d3dpp));
+	g_d3dpp.Windowed = TRUE;
+	g_d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	g_d3dpp.BackBufferFormat = D3DFMT_UNKNOWN; // Need to use an explicit format with alpha if needing per-pixel alpha composition.
+	g_d3dpp.EnableAutoDepthStencil = TRUE;
+	g_d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
+	g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;           // Present with vsync
+	//g_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;   // Present without vsync, maximum unthrottled framerate
+	if (g_pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hWnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &g_d3dpp, &g_pd3dDevice) < 0)
+		return false;
+
+	return true;
 }
 
-if(name == 3){
-    int number;
-    std::string answer;
-    
-    
-    while(true){
-        std::cout << "Pick a number for the role you want randomized" << '\n' << '\n' << "1. Vanguard | 2. Duelist | 3. Strategist" << '\n' << '\n';
-        std::cin >> number;
-
-        if(number == 1){
-            vanguard();
-        }else if(number == 2){
-            duelist();
-        }else if(number == 3){
-            strategist();
-        }
-        
-        std::cout << '\n' << "Next random character?" << '\n' << "Yes or no?";
-        std::cin >> answer;
-
-        if(answer == "no"){
-            break; 
-        }
-    }
+void CleanupDeviceD3D()
+{
+	if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = nullptr; }
+	if (g_pD3D) { g_pD3D->Release(); g_pD3D = nullptr; }
 }
 
-    std::cout << "Do you want to pick another game?" << '\n';
-    std::cout << "Yes or No?" << '\n';
-    std::cin >> answer;
-
-    if(answer == "no"){
-        return 0;
-    }
-
-
+void ResetDevice()
+{
+	ImGui_ImplDX9_InvalidateDeviceObjects();
+	HRESULT hr = g_pd3dDevice->Reset(&g_d3dpp);
+	if (hr == D3DERR_INVALIDCALL)
+		IM_ASSERT(0);
+	ImGui_ImplDX9_CreateDeviceObjects();
 }
 
+// Forward declare message handler from imgui_impl_win32.cpp
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+// Win32 message handler
+// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
+// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
+// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+		return true;
 
-
-
-return 0;
-}
-
-void sup(){
-    std::string answer;
-    srand(time(NULL));
-    int supp = 1; 
-    
-    
-    while(true){
-    supp = (rand() % 14) + 1;
-
-    if(supp == 1){
-        std::cout << "The supp chosen was Ana" << '\n';
-    }else if(supp == 2){
-        std::cout << "The supp chosen was Baptiste" << '\n';
-    }else if(supp == 3){
-        std::cout << "The supp chosen was Brigitte" << '\n';
-    }else if(supp == 4){
-        std::cout << "The supp chosen was Illari" << '\n';
-    }else if(supp == 5){
-        std::cout << "The supp chosen was Jetpack Cat" << '\n';
-    }else if(supp == 6){
-        std::cout << "The supp chosen was Juno" << '\n';
-    }else if(supp == 7){
-        std::cout << "The supp chosen was Kiriko" << '\n';
-    }else if(supp == 8){
-        std::cout << "The supp chosen was Lifeweaver" << '\n';
-    }else if(supp == 9){
-        std::cout << "The supp chosen was Lúcio" << '\n';
-    }else if(supp == 10){
-        std::cout << "The supp chosen was Mercy" << '\n';
-    }else if(supp == 11){
-        std::cout << "The supp chosen was Mizuki" << '\n';
-    }else if(supp == 12){
-        std::cout << "The supp chosen was Moira" << '\n';
-    }else if(supp == 13){
-        std::cout << "The supp chosen was Wuyang" << '\n';
-    }else if(supp == 14){
-        std::cout << "The supp chosen was Zenyatta" << '\n';
-    }
-    std::cout << "Do you want to reroll your Tank?" << '\n' << '\n';
-    std::cin >> answer;
-    
-    if(answer == "no"){
-        break;
-    }
-}
-
-}
-
-void tank1(){
-    std::string answer;
-    srand(time(NULL)); 
-    int tank = 1;
-   
-    while(true){
-
-    tank = (rand() % 15) + 1;
-
-
-    if(tank == 1){
-        std::cout << "The tank chosen was Ramattra" << '\n';
-    }else if(tank == 2){
-        std::cout << "The tank chosen was D.VA" << '\n';
-    }else if(tank == 3){
-        std::cout << "The tank chosen was Domina" << '\n';
-    }else if(tank == 4){
-        std::cout << "The tank chosen was Doomfist" << '\n';
-    }else if(tank == 5){
-        std::cout << "The tank chosen was Hazard" << '\n';
-    }else if(tank == 6){
-        std::cout << "The tank chosen was Junker Queen" << '\n';
-    }else if(tank == 7){
-        std::cout << "The tank chosen was Mauga" << '\n';
-    }else if(tank == 8){
-        std::cout << "The tank chosen was Orisa" << '\n';
-    }else if(tank == 9){
-        std::cout << "The tank chosen was Reinhardt" << '\n';
-    }else if(tank == 10){
-        std::cout << "The tank chosen was Roadhog" << '\n';
-    }else if(tank == 11){
-        std::cout << "The tank chosen was Sigma" << '\n';
-    }else if( tank == 12){
-        std::cout << "The tank chosen was Winston" << '\n';
-    }else if(tank == 13){
-        std::cout << "The tank chosen was Wrecking Ball" << '\n';
-    }else if(tank == 14){
-        std::cout << "The tank chosen was Zarya" << '\n' << '\n';
-    }
-    
-    std::cout << "Do you want to reroll your Tank?" << '\n' << '\n';
-    std::cin >> answer;
-    
-    if(answer == "no"){
-        break;
-    }
-}
-}
-
-void DPS(){
-    std::string answer;
-    srand(time(NULL)); 
-    int dps = 1;
-    
-    while(true){
-
-    
-    dps = (rand() % 23) + 1;
-    
-    if(dps == 1){
-        std::cout << "The dps chosen was Sierra" << '\n';
-    }else if(dps == 2){
-        std::cout << "The dps chosen was Anran" << '\n';
-    }else if(dps == 3){
-        std::cout << "The dps chosen was Ashe" << '\n';
-    }else if(dps == 4){
-        std::cout << "The dps chosen was Bastion" << '\n';
-    }else if(dps == 5){
-        std::cout << "The dps chosen was Cassidy" << '\n';
-    }else if(dps == 6){
-        std::cout << "The dps chosen was Echo" << '\n';
-    }else if(dps == 7){
-        std::cout << "The dps chosen was Emre" << '\n';
-    }else if(dps == 8){
-        std::cout << "The dps chosen was Freja" << '\n';
-    }else if(dps == 9){
-        std::cout << "The dps chosen was Genji" << '\n';
-    }else if(dps == 10){
-        std::cout << "The dps chosen was Hanzo" << '\n';
-    }else if(dps == 11){
-        std::cout << "The dps chosen was Junkrat" << '\n';
-    }else if(dps == 12){
-        std::cout << "The dps chosen was Mei" << '\n';
-    }else if(dps == 13){
-        std::cout << "The dps chosen was Pharah" << '\n';
-    }else if(dps == 14){
-        std::cout << "The dps chosen was Reaper" << '\n';
-    }else if(dps == 15){
-        std::cout << "The dps chosen was Sojourn" << '\n';
-    }else if(dps == 16){
-        std::cout << "The dps chosen was Soldier: 76" << '\n';
-    }else if(dps == 17){
-        std::cout << "The dps chosen was Sombra" << '\n';
-    }else if(dps == 18){
-        std::cout << "The dps chosen was Symmetra" << '\n';
-    }else if(dps == 19){
-        std::cout << "The dps chosen was Torbjörn" << '\n';
-    }else if(dps == 20){
-        std::cout << "The dps chosen was Tracer" << '\n';
-    }else if(dps == 21){
-        std::cout << "The dps chosen was Vendetta" << '\n';
-    }else if(dps == 22){
-        std::cout << "The dps chosen was Venture" << '\n';
-    }else if(dps == 23){
-        std::cout << "The dps chosen was Widowmaker" << '\n';
-    }
-
-    std::cout << "Do you want to reroll your DPS?" << '\n' << '\n';
-    std::cin >> answer;
-    
-    if(answer == "no"){
-        break;
-    }
-}
-}
-
-void apex(){
-
-    std::string answer;
-    int apex = 1;
-    srand(time(NULL));
-    
-    while(true){
-
-        apex = (rand() % 28) + 1;
-        
-
-        if(apex == 1){
-            std::cout << "The character chosen was Mirage" << '\n';
-        }else if(apex == 2){
-            std::cout << "The character chosen was Newcastle" << '\n';
-        }else if(apex == 3){
-            std::cout << "The character chosen was Octane" << '\n';
-        }else if(apex == 4){
-            std::cout << "The character chosen was Pathfinder" << '\n';
-        }else if(apex == 5){
-            std::cout << "The character chosen was Rampart" << '\n';
-        }else if(apex == 6){
-            std::cout << "The character chosen was Revenant" << '\n';
-        }else if(apex == 7){
-            std::cout << "The character chosen was Seer" << '\n';
-        }else if(apex == 8){
-            std::cout << "The character chosen was Sparrow" << '\n';
-        }else if(apex == 9){
-            std::cout << "The character chosen was Valkyrie" << '\n';
-        }else if(apex == 10){
-            std::cout << "The character chosen was Vantage" << '\n';
-        }else if(apex == 11){
-            std::cout << "The character chosen was Wattson" << '\n';
-        }else if(apex == 12){
-            std::cout << "The character chosen was Wraith" << '\n';
-        }else if(apex == 13){
-            std::cout << "The character chosen was Alter" << '\n';
-        }else if(apex == 14){
-            std::cout << "The character chosen was Ash" << '\n';
-        }else if(apex == 15){
-            std::cout << "The character chosen was Axle" << '\n';
-        }else if(apex == 16){
-            std::cout << "The character chosen was Ballistic" << '\n';
-        }else if(apex == 17){
-            std::cout << "The character chosen was Bangalore" << '\n';
-        }else if(apex == 18){
-            std::cout << "The character chosen was Bloodhound" << '\n';
-        }else if(apex == 19){
-            std::cout << "The character chosen was Catalyst" << '\n';
-        }else if(apex == 20){
-            std::cout << "The character chosen was Caustic" << '\n';
-        }else if(apex == 21){
-            std::cout << "The character chosen was Conduit" << '\n';
-        }else if(apex == 22){
-            std::cout << "The character chosen was Crypto" << '\n';
-        }else if(apex == 23){
-            std::cout << "The character chosen was Fuse" << '\n';
-        }else if(apex == 24){
-            std::cout << "The character chosen was Gibraltar" << '\n';
-        }else if(apex == 25){
-            std::cout << "The character chosen was Horizon" << '\n';
-        }else if(apex == 26){
-            std::cout << "The character chosen was Lifeline" << '\n';
-        }else if(apex == 27){
-            std::cout << "The character chosen was Loba" << '\n';
-        }else if(apex == 28){
-            std::cout << "The character chosen was Mad Maggie" << '\n';
-        }
-
-        std::cout << "Do you want to reroll your character?" << '\n';
-        std::cout << "Yes or no?" << '\n';
-        std::cin >> answer;
-
-        if(answer == "no"){
-        break;
-    }
-    }
-    
+	switch (msg)
+	{
+	case WM_SIZE:
+		if (wParam == SIZE_MINIMIZED)
+			return 0;
+		g_ResizeWidth = (UINT)LOWORD(lParam); // Queue resize
+		g_ResizeHeight = (UINT)HIWORD(lParam);
+		return 0;
+	case WM_SYSCOMMAND:
+		if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+			return 0;
+		break;
+	case WM_DESTROY:
+		::PostQuitMessage(0);
+		return 0;
+	}
+	return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
 
-void vanguard(){
 
-    std::string answer;
-    int vanguard = 1;
-    srand(time(NULL));
-    
-    while(true){
+int RandomShitIDontNeed() {
 
-        vanguard = (rand() % 28) +1;
 
-        if(vanguard == 1){
-            std::cout << "The chosen Vanguard is Angela" << '\n';
-        }else if(vanguard == 2){
-            std::cout << "The chosen Vanguard is Captain America" << '\n';
-        }else if(vanguard == 3){
-            std::cout << "The chosen Vanguard is Deadpool" << '\n';
-        }else if(vanguard == 4){
-            std::cout << "The chosen Vanguard is Doctor Strange" << '\n';
-        }else if(vanguard == 5){
-            std::cout << "The chosen Vanguard is Emma Frost" << '\n';
-        }else if(vanguard == 6){
-            std::cout << "The chosen Vanguard is Groot" << '\n';
-        }else if(vanguard == 7){
-            std::cout << "The chosen Vanguard is Hulk" << '\n';
-        }else if(vanguard == 8){
-            std::cout << "The chosen Vanguard is Magneto" << '\n';
-        }else if(vanguard == 9){
-            std::cout << "The chosen Vanguard is Peni Parker" << '\n';
-        }else if(vanguard == 10){
-            std::cout << "The chosen Vanguard is Rogue" << '\n';
-        }else if(vanguard == 11){
-            std::cout << "The chosen Vanguard is The Thing" << '\n';
-        }else if(vanguard == 12){
-            std::cout << "The chosen Vanguard is Thor" << '\n';
-        }else{
-            std::cout << "The chosen Vanguard is Venom" << '\n';
-        }
-    
-        std::cout << "Do you want to reroll your character?" << '\n';
-        std::cout << "Yes or no?" << '\n';
-        std::cin >> answer;
+	srand(time(NULL));
+	std::string name;
+	std::string answer;
 
-        if(answer == "no"){
-        break;
-    }
-    
-    
-    }
+	std::cout << "Welcome to the Randomizer" << '\n';
+
+	Sleep(500);
+
+	while (true) {
+		std::cout << "Which game are you playing?" << '\n';
+		std::cout << "1. Overwatch | 2. Apex Legends | 3. Marvel Rivals" << '\n';
+		std::cin >> name;
+		std::cout << '\n';
+
+
+		if (name == "1") {
+
+			std::string answer;
+			std::string number;
+
+			while (true) {
+
+				std::cout << "Pick a number for the role you want randomized" << '\n' << '\n' << "1. Tank | 2. DPS | 3. Support" << '\n' << '\n';
+				std::cin >> number;
+
+				if (number == "1" || number == "Tank" || number == "tank") {
+
+					tank();
+
+				}
+				else if (number == "2" || number == "DPS" || number == "dps") {
+
+					DPS();
+
+				}
+				else if (number == "3" || number == "Support" || number == "support") {
+					sup();
+				}
+				else {
+					continue;
+				}
+
+				std::cout << '\n' << "Next random character?" << '\n' << "Yes or no?";
+				std::cin >> answer;
+
+				if (answer == "no") {
+					break;
+				}
+			}
+		}
+
+		if (name == "2") {
+
+			apex();
+
+		}
+
+		if (name == "3") {
+			std::string number;
+			std::string answer;
+
+
+			while (true) {
+				std::cout << "Pick a number for the role you want randomized" << '\n' << '\n' << "1. Vanguard | 2. Duelist | 3. Strategist" << '\n' << '\n';
+				std::cin >> number;
+
+				if (number == "1" || number == "Vanguard" || number == "vanguard") {
+					vanguard();
+				}
+				else if (number == "2" || number == "Duelist" || number == "duelist") {
+					duelist();
+				}
+				else if (number == "3" || number == "Strategist" || number == "strategist") {
+					strategist();
+				}
+				else {
+					continue;
+				}
+
+				std::cout << '\n' << "Next random character?" << '\n' << "Yes or no?";
+				std::cin >> answer;
+
+				if (answer == "no") {
+					break;
+				}
+			}
+		}
+
+		std::cout << "Do you want to pick another game?" << '\n';
+		std::cout << "Yes or No?" << '\n';
+		std::cin >> answer;
+
+		if (answer == "no") {
+			return 0;
+		}
+
+
+	}
+
+
+
+
+
+	return 0;
 }
 
-void duelist(){
+void sup() {
 
-    std::string answer;
-    int duelist = 1;
-    srand(time(NULL));
+	std::string answer;
+	std::string last;
 
-    while(true){
+	while (true) {
 
-        duelist = (rand() % 25) +1;
+		int i = rand() % 8;
 
-        if(duelist == 1){
-            std::cout << "The chosen Duelist is Black Cat" << '\n';
-        }else if(duelist == 2){
-            std::cout << "The chosen Duelist is Black Panther" << '\n';
-        }else if(duelist == 3){
-            std::cout << "The chosen Duelist is Black Widow" << '\n';
-        }else if(duelist == 4){
-            std::cout << "The chosen Duelist is Blade" << '\n';
-        }else if(duelist == 5){
-            std::cout << "The chosen Duelist is Daredevil" << '\n';
-        }else if(duelist == 6){
-            std::cout << "The chosen Duelist is Deadpool" << '\n';
-        }else if(duelist == 7){
-            std::cout << "The chosen Duelist is Elsa Bloodstone" << '\n';
-        }else if(duelist == 8){
-            std::cout << "The chosen Duelist is Hawkeye" << '\n';
-        }else if(duelist == 9){
-            std::cout << "The chosen Duelist is Hela" << '\n';
-        }else if(duelist == 10){
-            std::cout << "The chosen Duelist is Human Torch" << '\n';
-        }else if(duelist == 11){
-            std::cout << "The chosen Duelist is Iron Fist" << '\n';
-        }else if(duelist == 12){
-            std::cout << "The chosen Duelist is Iron Man" << '\n';
-        }else if(duelist == 13){
-            std::cout << "The chosen Duelist is Magik" << '\n';
-        }else if(duelist == 14){
-            std::cout << "The chosen Duelist is Mister Fantastic" << '\n';
-        }else if(duelist == 15){
-            std::cout << "The chosen Duelist is Moon Knight" << '\n';
-        }else if(duelist == 16){
-            std::cout << "The chosen Duelist is Namor" << '\n';
-        }else if(duelist == 17){
-            std::cout << "The chosen Duelist is Phoenix" << '\n';
-        }else if(duelist == 18){
-            std::cout << "The chosen Duelist is Psylocke" << '\n';
-        }else if(duelist == 19){
-            std::cout << "The chosen Duelist is Scarlett Witch" << '\n';
-        }else if(duelist == 20){
-            std::cout << "The chosen Duelist is Spider-Man" << '\n';
-        }else if(duelist == 21){
-            std::cout << "The chosen Duelist is Squirrel Girl" << '\n';
-        }else if(duelist == 22){
-            std::cout << "The chosen Duelist is Star-Lord" << '\n';
-        }else if(duelist == 23){
-            std::cout << "The chosen Duelist is Storm" << '\n';
-        }else if(duelist == 24){
-            std::cout << "The chosen Duelist is The Punisher" << '\n';
-        }else if(duelist == 25){
-            std::cout << "The chosen Duelist is Winter Soldier" << '\n';
-        }else{
-            std::cout << "The chosen Duelist is Wolverine" << '\n';
-        }
+		std::string supp[] = { "Ana", "Baptiste", "B rigitte", "Illari", "Jetpack Cat", "Juno", "Kiriko", "Lifeweaver", "Lucio", "Mercy", "Mizuki", "Moira", "Wuyang", "Zenyatta" };
 
-        std::cout << "Do you want to reroll your character?" << '\n';
-        std::cout << "Yes or no?" << '\n';
-        std::cin >> answer;
+		if (supp[i] == last) {
+			continue;
+		}
 
-        if(answer == "no"){
-        break;
-    }
+		std::cout << supp[i] << '\n';
 
+		std::cout << "Do you want to reroll your support?" << '\n';
+		std::cout << "Yes or no?" << '\n';
+		std::cin >> answer;
 
-}
+		if (answer == "no") {
+			break;
+		}
+
+		last = supp[i];
+	}
 }
 
-void strategist(){
+void tank() {
 
-    std::string answer;
-    int strategist = 1;
-    srand(time(NULL));
+	std::string answer;
+	std::string last;
 
-    while(true){
+	while (true) {
 
-        strategist = (rand() % 8) +1;
+		int i = rand() % 8;
 
-        if(strategist == 1){
-            std::cout << "The chosen Strategist is White Fox" << '\n';
-        }else if(strategist == 2){
-            std::cout << "The chosen Strategist is Luna Snow" << '\n';
-        }else if(strategist == 3){
-            std::cout << "The chosen Strategist is Gambit" << '\n';
-        }else if(strategist == 4){
-            std::cout << "The chosen Strategist is Deadpool" << '\n';
-        }else if(strategist == 5){
-            std::cout << "The chosen Strategist is Invisible Woman" << '\n';
-        }else if(strategist == 6){
-            std::cout << "The chosen Strategist is Jeff the Land Shark" << '\n';
-        }else if(strategist == 7){
-            std::cout << "The chosen Strategist is Cloak & Dagger" << '\n';
-        }else{
-            std::cout << "The chosen Strategist is Adam Warlock" << '\n';
-        }
+		std::string tank[] = { "Ramattra", "D.VA", "Domina", "Doomfist", "Hazard", "Junker Queen", "Mauga", "Orisa", "Reinhardty", "Roadhog", "Sigma", "Winston", "Wrecking Ball", "Zarya" };
 
-        std::cout << "Do you want to reroll your character?" << '\n';
-        std::cout << "Yes or no?" << '\n';
-        std::cin >> answer;
+		if (tank[i] == last) {
+			continue;
+		}
 
-        if(answer == "no"){
-        break;
-    }
+		std::cout << tank[i] << '\n';
+
+		std::cout << "Do you want to reroll your tank?" << '\n';
+		std::cout << "Yes or no?" << '\n';
+		std::cin >> answer;
+
+		if (answer == "no") {
+			break;
+		}
+
+		last = tank[i];
+	}
 }
+
+void DPS()
+{
+	std::string answer;
+	std::string last;
+
+	while (true) {
+
+		int i = rand() % 8;
+
+		std::string DPS[] = { "Sierra", "Anran", "Ashe", "Bastion", "Cassidy", "Echo", "Emre", "Freja", "Genji", "Hanzo", "Junkrat", "Mei", "Pharah", "Reaper", "Sojourn", "Soldier: 76", "Sombra", "Symmetra",
+		"Torbjorn", "Tracer", "Vendetta", "Ventur", "Widowmaker" };
+
+		if (DPS[i] == last) {
+			continue;
+		}
+
+		std::cout << DPS[i] << '\n';
+
+		std::cout << "Do you want to reroll your DPS?" << '\n';
+		std::cout << "Yes or no?" << '\n';
+		std::cin >> answer;
+
+		if (answer == "no") {
+			break;
+		}
+
+		last = DPS[i];
+	}
+}
+
+void apex() {
+
+	std::string answer;
+	std::string last;
+
+	while (true) {
+
+		int i = rand() % 8;
+
+		std::string apex[] = { "Alter", "Ash", "Axle", "Ballistic", "Bangalore", "Bloodhound", "Catalyst", "Casustic", "Conduit", "Crypto", "Fuse", "Gibraltar", "Horizn", "Lifeline", "Loba", "Mad Maggie",
+		"Mirage", "Newcastle", "Octane", "Pathfinder", "Rampart", "Revenant", "Seer", "Sparrow", "Valkyrie", "Vantage", "Wattson", "Wraith" };
+
+		if (apex[i] == last) {
+			continue;
+		}
+
+		std::cout << apex[i] << '\n';
+
+		std::cout << "Do you want to reroll your character?" << '\n';
+		std::cout << "Yes or no?" << '\n';
+		std::cin >> answer;
+
+		if (answer == "no") {
+			break;
+		}
+
+		last = apex[i];
+	}
+}
+
+
+void vanguard() {
+
+	std::string answer;
+	std::string last;
+
+	while (true) {
+
+		int i = rand() % 8;
+
+		std::string vanguard[] = { "Angela", "Bruce Banner", "Hulk", "Captain America", "Doctor Strange", "Emma Frost", "Groot", "Magneto", "Peni Parker", "Rogue", "The Thing", "Thor", "Venom" };
+
+		if (vanguard[i] == last) {
+			continue;
+		}
+
+		std::cout << vanguard[i] << '\n';
+
+		std::cout << "Do you want to reroll your character?" << '\n';
+		std::cout << "Yes or no?" << '\n';
+		std::cin >> answer;
+
+		if (answer == "no") {
+			break;
+		}
+
+		last = vanguard[i];
+	}
+
+}
+
+void duelist() {
+
+	std::string answer;
+	std::string last;
+
+	while (true) {
+
+		int i = rand() % 8;
+
+		std::string duelist[] = { "Black Cat", "Black Panther", "Black Widow", "Blade", "Daredevil", "Deadpool", "Elsa Bloodstone", "Hawkeye", "Hela", "Human Torch", "Iron Fist", "Iron Man", "Magik"
+		"Mister Fantastic", "Moon Knight", "Namor", "Phoenix", "Psylocke", "Scarlet Witch", "Spider-Man", "Squirrel Girl", "Star-Lord", "Storm", "The Punisher", "Winter Soldier", "Wolverine" };
+
+		if (duelist[i] == last) {
+			continue;
+		}
+
+		std::cout << duelist[i] << '\n';
+
+		std::cout << "Do you want to reroll your character?" << '\n';
+		std::cout << "Yes or no?" << '\n';
+		std::cin >> answer;
+
+		if (answer == "no") {
+			break;
+		}
+
+		last = duelist[i];
+	}
+}
+
+
+void strategist() {
+
+
+	std::string answer;
+	std::string last;
+
+	while (true) {
+
+		int i = rand() % 8;
+
+		std::string strategist[] = { "White Fox", "Luna Snow", "Gambit", "Deadpool", "Invisible Woman", "Jeff the Land Shark", "Cloak & Dagger", "Adam Warlock" };
+
+		if (strategist[i] == last) {
+			continue;
+		}
+
+		std::cout << strategist[i] << '\n';
+
+		std::cout << "Do you want to reroll your character?" << '\n';
+		std::cout << "Yes or no?" << '\n';
+		std::cin >> answer;
+
+		if (answer == "no") {
+			break;
+		}
+
+		last = strategist[i];
+	}
+
+}
+
+std::string last;
+std::string character;
+int i = 1;
+int game = -1;
+int overwatch = -1;
+int marvel = -1;
+
+void clickyclacky() {
+
+
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+
+	static float f = 0.0f;
+	static int counter = 0;
+
+	ImGui::SetNextWindowPos(ImVec2(5, 644), ImGuiCond_FirstUseEver);
+
+	ImGui::Begin("Color");                          // Create a window called "Hello, world!" and append into it.
+
+	ImGui::Text("Here you can change the color of the background");               // Display some text (you can use a format strings too)
+
+	ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+	if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+		counter++;
+	ImGui::SameLine();
+	ImGui::Text("counter = %d", counter);
+
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+	ImGui::End();
+
+
+	ImGui::SetNextWindowPos(ImVec2(493, 52), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(293, 168), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Randomizer");
+
+
+
+	if (game == -1) {
+		ImGui::Text("Which game would you like to play?");
+		if (ImGui::Button("Overwatch")) {
+			game = 0;
+			character = "";
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Marvel Rivals")) {
+			game = 1;
+			character = "";
+		}
+	}
+	else if (game == 0) {
+		ImGui::Text("Which Role do you want to randomize?");
+		if (ImGui::Button("Tank")) {
+			while (true) {
+				overwatch = 1;
+				std::string tanks[] = { "Ramattra", "D.VA", "Domina", "Doomfist", "Hazard", "Junker Queen", "Mauga", "Orisa", "Reinhardt", "Roadhog", "Sigma", "Winston", "Wrecking Ball", "Zarya" };
+				int i = rand() % std::size(tanks);
+				last = character;
+				character = tanks[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("DPS")) {
+			while (true) {
+				overwatch = 1;
+				std::string Dps[] = { "Sierra", "Anran", "Ashe", "Bastion", "Cassidy", "Echo", "Emre", "Freja", "Genji", "Hanzo", "Junkrat", "Mei", "Pharah", "Reaper", "Sojourn", "Soldier: 76", "Sombra", "Symmetra",
+									  "Torbjorn", "Tracer", "Vendetta", "Venture", "Widowmaker" };
+				int i = rand() % std::size(Dps);
+				last = character;
+				character = Dps[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Support")) {
+			while (true) {
+				overwatch = 1;
+				std::string Support[] = { "Ana", "Baptiste", "Brigitte", "Illari", "Jetpack Cat", "Juno", "Kiriko", "Lifeweaver", "Lucio", "Mercy", "Mizuki", "Moira", "Wuyang", "Zenyatta" };
+				int i = rand() % std::size(Support);
+				last = character;
+				character = Support[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+
+		if (character != "") {
+
+			ImGui::Text(character.c_str());
+			ImGui::Text("Do you want to reroll your character?");
+		}
+		if (ImGui::Button("Back to Main Menu")) {
+			game = -1;
+		}
+	}
+	else if (game == 1) {
+		ImGui::Text("Which Role do you want to randomize?");
+		if (ImGui::Button("Vanguard")) {
+			marvel = 1;
+			while (true) {
+
+				std::string vanguard[] = { "Angela", "Bruce Banner", "Hulk", "Captain America", "Doctor Strange", "Emma Frost", "Groot", "Magneto", "Peni Parker", "Rogue", "The Thing", "Thor", "Venom" };
+				int i = rand() % std::size(vanguard);
+				last = character;
+				character = vanguard[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Duelist")) {
+			marvel = 1;
+			while (true) {
+
+				std::string duelist[] = { "Black Cat", "Black Panther", "Black Widow", "Blade", "Daredevil", "Deadpool", "Elsa Bloodstone", "Hawkeye", "Hela", "Human Torch", "Iron Fist", "Iron Man", "Magik"
+											"Mister Fantastic", "Moon Knight", "Namor", "Phoenix", "Psylocke", "Scarlet Witch", "Spider-Man", "Squirrel Girl", "Star-Lord", "Storm", "The Punisher",
+											  "Winter Soldier", "Wolverine" };
+				int i = rand() % std::size(duelist);
+				last = character;
+				character = duelist[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Strategist")) {
+			marvel = 1;
+			while (true) {
+
+				std::string duelist[] = { "White Fox", "Luna Snow", "Gambit", "Deadpool", "Invisible Woman", "Jeff the Land Shark", "Cloak & Dagger", "Adam Warlock" };
+				int i = rand() % std::size(duelist);
+				last = character;
+				character = duelist[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+
+		if (character != "") {
+
+			ImGui::Text(character.c_str());
+			ImGui::Text("Do you want to reroll your character?");
+		}
+		if (ImGui::Button("Back to Main Menu")) {
+			game = -1;
+		}
+	}
+
+	ImGui::End();
 }
