@@ -581,6 +581,7 @@ int i = 1;
 int game = -1;
 int overwatch = -1;
 int marvel = -1;
+int siege = -1;
 
 void clickyclacky() {
 
@@ -609,7 +610,7 @@ void clickyclacky() {
 
 
 	ImGui::SetNextWindowPos(ImVec2(493, 52), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(293, 168), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(332, 167), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Randomizer");
 
 
@@ -623,6 +624,11 @@ void clickyclacky() {
 		ImGui::SameLine();
 		if (ImGui::Button("Marvel Rivals")) {
 			game = 1;
+			character = "";
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Rainbow Six Siege")) {
+			game = 2;
 			character = "";
 		}
 	}
@@ -738,6 +744,49 @@ void clickyclacky() {
 			game = -1;
 		}
 	}
+	else if (game == 2) {
+		ImGui::Text("Which side are you on?");
+		
+		if (ImGui::Button("Attackers")) {
+			while (true) {
+				std::string attack[] = { "Solid Snake", "Striker", "Rauora", "Deimos", "Ram", "Brava", "Grim", "Sens", "Osa", "Flores", "Zero", "Ace", "Iana", "Kali", "Amaru", "Nokk", "Gridlock", "Nomad",
+											"Maverick", "Lion", "Finka", "Dokkaebi", "Zofia", "Ying", "Jackal", "Hibana", "Capitao", "Blackbeard", "Buck", "Sledge", "Thatcher", "Ash", "Thermite", "Montagne",
+												"Twitch", "Blitz", "IQ", "Fuze", "Glaz" };
+				int i = rand() % std::size(attack);
+				last = character;
+				character = attack[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Defenders")) {
+			while (true) {
+				std::string defend[] = { "Denari", "Skopos", "Sentry", "Tubarao", "Fenrir", "Solis", "Azami", "Thorn", "Thunderbird", "Aruni", "Melusi", "Oryx", "Wamai", "Goyo", "Warden", "Mozzie", "Kaid",
+											"Clash", "Maestro", "Alibi", "Vigil", "Ela", "Lesion", "Mira", "Echo", "Caveira", "Valkyrie", "Frost", "Mute", "Smoke", "Castle", "Pulse", "Doc", "Rook", "Jager", 
+												"Bandit", "Tachanka", "Kapkan" };
+				int i = rand() % std::size(defend);
+				last = character;
+				character = defend[i];
+
+				if (character != last) {
+					break;
+				}
+			}
+		}
+		if (character != "") {
+
+			ImGui::Text(character.c_str());
+			ImGui::Text("Do you want to reroll your character?");
+		}
+		if (ImGui::Button("Back to Main Menu")) {
+			game = -1;
+		}
+
+	}
+
 
 	ImGui::End();
 }
