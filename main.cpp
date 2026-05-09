@@ -26,6 +26,7 @@ void main_menu();
 void reroll(std::span<std::string> vanilla);
 
 
+
 void clickyclacky();
 
 ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -258,327 +259,6 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-
-int RandomShitIDontNeed() {
-
-
-	srand(time(NULL));
-	std::string name;
-	std::string answer;
-
-	std::cout << "Welcome to the Randomizer" << '\n';
-
-	Sleep(500);
-
-	while (true) {
-		std::cout << "Which game are you playing?" << '\n';
-		std::cout << "1. Overwatch | 2. Apex Legends | 3. Marvel Rivals" << '\n';
-		std::cin >> name;
-		std::cout << '\n';
-
-
-		if (name == "1") {
-
-			std::string answer;
-			std::string number;
-
-			while (true) {
-
-				std::cout << "Pick a number for the role you want randomized" << '\n' << '\n' << "1. Tank | 2. DPS | 3. Support" << '\n' << '\n';
-				std::cin >> number;
-
-				if (number == "1" || number == "Tank" || number == "tank") {
-
-					tank();
-
-				}
-				else if (number == "2" || number == "DPS" || number == "dps") {
-
-					DPS();
-
-				}
-				else if (number == "3" || number == "Support" || number == "support") {
-					sup();
-				}
-				else {
-					continue;
-				}
-
-				std::cout << '\n' << "Next random character?" << '\n' << "Yes or no?";
-				std::cin >> answer;
-
-				if (answer == "no") {
-					break;
-				}
-			}
-		}
-
-		if (name == "2") {
-
-			apex();
-
-		}
-
-		if (name == "3") {
-			std::string number;
-			std::string answer;
-
-
-			while (true) {
-				std::cout << "Pick a number for the role you want randomized" << '\n' << '\n' << "1. Vanguard | 2. Duelist | 3. Strategist" << '\n' << '\n';
-				std::cin >> number;
-
-				if (number == "1" || number == "Vanguard" || number == "vanguard") {
-					vanguard();
-				}
-				else if (number == "2" || number == "Duelist" || number == "duelist") {
-					duelist();
-				}
-				else if (number == "3" || number == "Strategist" || number == "strategist") {
-					strategist();
-				}
-				else {
-					continue;
-				}
-
-				std::cout << '\n' << "Next random character?" << '\n' << "Yes or no?";
-				std::cin >> answer;
-
-				if (answer == "no") {
-					break;
-				}
-			}
-		}
-
-		std::cout << "Do you want to pick another game?" << '\n';
-		std::cout << "Yes or No?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			return 0;
-		}
-
-
-	}
-
-
-
-
-
-	return 0;
-}
-
-void sup() {
-
-	std::string answer;
-	std::string last;
-
-	while (true) {
-
-		int i = rand() % 8;
-
-		std::string supp[] = { "Ana", "Baptiste", "B rigitte", "Illari", "Jetpack Cat", "Juno", "Kiriko", "Lifeweaver", "Lucio", "Mercy", "Mizuki", "Moira", "Wuyang", "Zenyatta" };
-
-		if (supp[i] == last) {
-			continue;
-		}
-
-		std::cout << supp[i] << '\n';
-
-		std::cout << "Do you want to reroll your support?" << '\n';
-		std::cout << "Yes or no?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			break;
-		}
-
-		last = supp[i];
-	}
-}
-
-void tank() {
-
-	std::string answer;
-	std::string last;
-
-	while (true) {
-
-		int i = rand() % 8;
-
-		std::string tank[] = { "Ramattra", "D.VA", "Domina", "Doomfist", "Hazard", "Junker Queen", "Mauga", "Orisa", "Reinhardty", "Roadhog", "Sigma", "Winston", "Wrecking Ball", "Zarya" };
-
-		if (tank[i] == last) {
-			continue;
-		}
-
-		std::cout << tank[i] << '\n';
-
-		std::cout << "Do you want to reroll your tank?" << '\n';
-		std::cout << "Yes or no?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			break;
-		}
-
-		last = tank[i];
-	}
-}
-
-void DPS()
-{
-	std::string answer;
-	std::string last;
-
-	while (true) {
-
-		int i = rand() % 8;
-
-		std::string DPS[] = { "Sierra", "Anran", "Ashe", "Bastion", "Cassidy", "Echo", "Emre", "Freja", "Genji", "Hanzo", "Junkrat", "Mei", "Pharah", "Reaper", "Sojourn", "Soldier: 76", "Sombra", "Symmetra",
-		"Torbjorn", "Tracer", "Vendetta", "Ventur", "Widowmaker" };
-
-		if (DPS[i] == last) {
-			continue;
-		}
-
-		std::cout << DPS[i] << '\n';
-
-		std::cout << "Do you want to reroll your DPS?" << '\n';
-		std::cout << "Yes or no?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			break;
-		}
-
-		last = DPS[i];
-	}
-}
-
-void apex() {
-
-	std::string answer;
-	std::string last;
-
-	while (true) {
-
-		int i = rand() % 8;
-
-		std::string apex[] = { "Alter", "Ash", "Axle", "Ballistic", "Bangalore", "Bloodhound", "Catalyst", "Casustic", "Conduit", "Crypto", "Fuse", "Gibraltar", "Horizn", "Lifeline", "Loba", "Mad Maggie",
-		"Mirage", "Newcastle", "Octane", "Pathfinder", "Rampart", "Revenant", "Seer", "Sparrow", "Valkyrie", "Vantage", "Wattson", "Wraith" };
-
-		if (apex[i] == last) {
-			continue;
-		}
-
-		std::cout << apex[i] << '\n';
-
-		std::cout << "Do you want to reroll your character?" << '\n';
-		std::cout << "Yes or no?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			break;
-		}
-
-		last = apex[i];
-	}
-}
-
-
-void vanguard() {
-
-	std::string answer;
-	std::string last;
-
-	while (true) {
-
-		int i = rand() % 8;
-
-		std::string vanguard[] = { "Angela", "Bruce Banner", "Hulk", "Captain America", "Doctor Strange", "Emma Frost", "Groot", "Magneto", "Peni Parker", "Rogue", "The Thing", "Thor", "Venom" };
-
-		if (vanguard[i] == last) {
-			continue;
-		}
-
-		std::cout << vanguard[i] << '\n';
-
-		std::cout << "Do you want to reroll your character?" << '\n';
-		std::cout << "Yes or no?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			break;
-		}
-
-		last = vanguard[i];
-	}
-
-}
-
-void duelist() {
-
-	std::string answer;
-	std::string last;
-
-	while (true) {
-
-		int i = rand() % 8;
-
-		std::string duelist[] = { "Black Cat", "Black Panther", "Black Widow", "Blade", "Daredevil", "Deadpool", "Elsa Bloodstone", "Hawkeye", "Hela", "Human Torch", "Iron Fist", "Iron Man", "Magik"
-		"Mister Fantastic", "Moon Knight", "Namor", "Phoenix", "Psylocke", "Scarlet Witch", "Spider-Man", "Squirrel Girl", "Star-Lord", "Storm", "The Punisher", "Winter Soldier", "Wolverine" };
-
-		if (duelist[i] == last) {
-			continue;
-		}
-
-		std::cout << duelist[i] << '\n';
-
-		std::cout << "Do you want to reroll your character?" << '\n';
-		std::cout << "Yes or no?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			break;
-		}
-
-		last = duelist[i];
-	}
-}
-
-
-void strategist() {
-
-
-	std::string answer;
-	std::string last;
-
-	while (true) {
-
-		int i = rand() % 8;
-
-		std::string strategist[] = { "White Fox", "Luna Snow", "Gambit", "Deadpool", "Invisible Woman", "Jeff the Land Shark", "Cloak & Dagger", "Adam Warlock" };
-
-		if (strategist[i] == last) {
-			continue;
-		}
-
-		std::cout << strategist[i] << '\n';
-
-		std::cout << "Do you want to reroll your character?" << '\n';
-		std::cout << "Yes or no?" << '\n';
-		std::cin >> answer;
-
-		if (answer == "no") {
-			break;
-		}
-
-		last = strategist[i];
-	}
-
-}
-
 std::string last;
 std::string character;
 int i = 1;
@@ -616,7 +296,7 @@ void clickyclacky() {
 	ImGui::End();
 
 
-	ImGui::SetNextWindowPos(ImVec2(435, 58), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(433, 58), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(410, 165), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Randomizer");
 
@@ -679,43 +359,43 @@ void clickyclacky() {
 			std::string vanguard[] = { "Angela", "Bruce Banner", "Hulk", "Captain America", "Doctor Strange", "Emma Frost", "Groot", "Magneto", "Peni Parker", "Rogue", "The Thing", "Thor", "Venom" };
 			reroll(vanguard);
 		}
-	ImGui::SameLine();
-	if (ImGui::Button("Duelist")) {
-		marvel = 1;
+		ImGui::SameLine();
+		if (ImGui::Button("Duelist")) {
+			marvel = 1;
 			std::string duelist[] = { "Black Cat", "Black Panther", "Black Widow", "Blade", "Daredevil", "Deadpool", "Elsa Bloodstone", "Hawkeye", "Hela", "Human Torch", "Iron Fist", "Iron Man", "Magik"
 										"Mister Fantastic", "Moon Knight", "Namor", "Phoenix", "Psylocke", "Scarlet Witch", "Spider-Man", "Squirrel Girl", "Star-Lord", "Storm", "The Punisher",
 										  "Winter Soldier", "Wolverine" };
 			reroll(duelist);
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Strategist")) {
-		marvel = 1;
-		std::string strategist[] = { "White Fox", "Luna Snow", "Gambit", "Deadpool", "Invisible Woman", "Jeff the Land Shark", "Cloak & Dagger", "Adam Warlock" };
-		reroll(strategist);
-	}
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Strategist")) {
+			marvel = 1;
+			std::string strategist[] = { "White Fox", "Luna Snow", "Gambit", "Deadpool", "Invisible Woman", "Jeff the Land Shark", "Cloak & Dagger", "Adam Warlock" };
+			reroll(strategist);
+		}
 
-	if (character != "") {
+		if (character != "") {
 
-		ImGui::Text(character.c_str());
-		ImGui::Text("Do you want to reroll your character?");
+			ImGui::Text(character.c_str());
+			ImGui::Text("Do you want to reroll your character?");
+		}
+		main_menu();
 	}
-	main_menu();
-}
-else if (game == 2) {
+	else if (game == 2) {
 		ImGui::Text("Which side are you on?");
 
 		if (ImGui::Button("Attackers")) {
-				std::string attack[] = { "Solid Snake", "Striker", "Rauora", "Deimos", "Ram", "Brava", "Grim", "Sens", "Osa", "Flores", "Zero", "Ace", "Iana", "Kali", "Amaru", "Nokk", "Gridlock", "Nomad",
-											"Maverick", "Lion", "Finka", "Dokkaebi", "Zofia", "Ying", "Jackal", "Hibana", "Capitao", "Blackbeard", "Buck", "Sledge", "Thatcher", "Ash", "Thermite", "Montagne",
-												"Twitch", "Blitz", "IQ", "Fuze", "Glaz" };
-				reroll(attack);
+			std::string attack[] = { "Solid Snake", "Striker", "Rauora", "Deimos", "Ram", "Brava", "Grim", "Sens", "Osa", "Flores", "Zero", "Ace", "Iana", "Kali", "Amaru", "Nokk", "Gridlock", "Nomad",
+										"Maverick", "Lion", "Finka", "Dokkaebi", "Zofia", "Ying", "Jackal", "Hibana", "Capitao", "Blackbeard", "Buck", "Sledge", "Thatcher", "Ash", "Thermite", "Montagne",
+											"Twitch", "Blitz", "IQ", "Fuze", "Glaz" };
+			reroll(attack);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Defenders")) {
-				std::string defend[] = { "Denari", "Skopos", "Sentry", "Tubarao", "Fenrir", "Solis", "Azami", "Thorn", "Thunderbird", "Aruni", "Melusi", "Oryx", "Wamai", "Goyo", "Warden", "Mozzie", "Kaid",
-											"Clash", "Maestro", "Alibi", "Vigil", "Ela", "Lesion", "Mira", "Echo", "Caveira", "Valkyrie", "Frost", "Mute", "Smoke", "Castle", "Pulse", "Doc", "Rook", "Jager",
-												"Bandit", "Tachanka", "Kapkan" };
-				reroll(defend);
+			std::string defend[] = { "Denari", "Skopos", "Sentry", "Tubarao", "Fenrir", "Solis", "Azami", "Thorn", "Thunderbird", "Aruni", "Melusi", "Oryx", "Wamai", "Goyo", "Warden", "Mozzie", "Kaid",
+										"Clash", "Maestro", "Alibi", "Vigil", "Ela", "Lesion", "Mira", "Echo", "Caveira", "Valkyrie", "Frost", "Mute", "Smoke", "Castle", "Pulse", "Doc", "Rook", "Jager",
+											"Bandit", "Tachanka", "Kapkan" };
+			reroll(defend);
 		}
 		if (character != "") {
 
@@ -747,7 +427,7 @@ void reroll(std::span<std::string> vanilla) {
 
 	while (true) {
 
-		
+
 		int i = rand() % std::size(vanilla);
 		last = character;
 		character = vanilla[i];
