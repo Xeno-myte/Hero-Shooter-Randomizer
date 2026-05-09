@@ -10,6 +10,7 @@
 #include <d3d9.h>
 #include <tchar.h>
 #include <misc/cpp/imgui_stdlib.h>
+#include <span>
 
 void sup();
 void DPS();
@@ -20,6 +21,9 @@ void apex();
 void vanguard();
 void duelist();
 void strategist();
+
+void main_menu();
+void reroll(std::span<std::string> vanilla);
 
 
 void clickyclacky();
@@ -584,6 +588,8 @@ int marvel = -1;
 int siege = -1;
 int terraria = -1;
 
+
+
 void clickyclacky() {
 
 
@@ -641,46 +647,22 @@ void clickyclacky() {
 	else if (game == 0) {
 		ImGui::Text("Which Role do you want to randomize?");
 		if (ImGui::Button("Tank")) {
-			while (true) {
-				overwatch = 1;
-				std::string tanks[] = { "Ramattra", "D.VA", "Domina", "Doomfist", "Hazard", "Junker Queen", "Mauga", "Orisa", "Reinhardt", "Roadhog", "Sigma", "Winston", "Wrecking Ball", "Zarya" };
-				int i = rand() % std::size(tanks);
-				last = character;
-				character = tanks[i];
-
-				if (character != last) {
-					break;
-				}
-			}
+			overwatch = 1;
+			std::string tanks[] = { "Ramattra", "D.VA", "Domina", "Doomfist", "Hazard", "Junker Queen", "Mauga", "Orisa", "Reinhardt", "Roadhog", "Sigma", "Winston", "Wrecking Ball", "Zarya" };
+			reroll(tanks);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("DPS")) {
-			while (true) {
-				overwatch = 1;
-				std::string Dps[] = { "Sierra", "Anran", "Ashe", "Bastion", "Cassidy", "Echo", "Emre", "Freja", "Genji", "Hanzo", "Junkrat", "Mei", "Pharah", "Reaper", "Sojourn", "Soldier: 76", "Sombra", "Symmetra",
-									  "Torbjorn", "Tracer", "Vendetta", "Venture", "Widowmaker" };
-				int i = rand() % std::size(Dps);
-				last = character;
-				character = Dps[i];
-
-				if (character != last) {
-					break;
-				}
-			}
+			overwatch = 1;
+			std::string Dps[] = { "Sierra", "Anran", "Ashe", "Bastion", "Cassidy", "Echo", "Emre", "Freja", "Genji", "Hanzo", "Junkrat", "Mei", "Pharah", "Reaper", "Sojourn", "Soldier: 76", "Sombra", "Symmetra",
+								  "Torbjorn", "Tracer", "Vendetta", "Venture", "Widowmaker" };
+			reroll(Dps);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Support")) {
-			while (true) {
-				overwatch = 1;
-				std::string Support[] = { "Ana", "Baptiste", "Brigitte", "Illari", "Jetpack Cat", "Juno", "Kiriko", "Lifeweaver", "Lucio", "Mercy", "Mizuki", "Moira", "Wuyang", "Zenyatta" };
-				int i = rand() % std::size(Support);
-				last = character;
-				character = Support[i];
-
-				if (character != last) {
-					break;
-				}
-			}
+			overwatch = 1;
+			std::string Support[] = { "Ana", "Baptiste", "Brigitte", "Illari", "Jetpack Cat", "Juno", "Kiriko", "Lifeweaver", "Lucio", "Mercy", "Mizuki", "Moira", "Wuyang", "Zenyatta" };
+			reroll(Support);
 		}
 
 		if (character != "") {
@@ -688,135 +670,96 @@ void clickyclacky() {
 			ImGui::Text(character.c_str());
 			ImGui::Text("Do you want to reroll your character?");
 		}
-		if (ImGui::Button("Back to Main Menu")) {
-			game = -1;
-		}
+		main_menu();
 	}
 	else if (game == 1) {
 		ImGui::Text("Which Role do you want to randomize?");
 		if (ImGui::Button("Vanguard")) {
 			marvel = 1;
-			while (true) {
-
-				std::string vanguard[] = { "Angela", "Bruce Banner", "Hulk", "Captain America", "Doctor Strange", "Emma Frost", "Groot", "Magneto", "Peni Parker", "Rogue", "The Thing", "Thor", "Venom" };
-				int i = rand() % std::size(vanguard);
-				last = character;
-				character = vanguard[i];
-
-				if (character != last) {
-					break;
-				}
-			}
+			std::string vanguard[] = { "Angela", "Bruce Banner", "Hulk", "Captain America", "Doctor Strange", "Emma Frost", "Groot", "Magneto", "Peni Parker", "Rogue", "The Thing", "Thor", "Venom" };
+			reroll(vanguard);
 		}
-		ImGui::SameLine();
-		if (ImGui::Button("Duelist")) {
-			marvel = 1;
-			while (true) {
-
-				std::string duelist[] = { "Black Cat", "Black Panther", "Black Widow", "Blade", "Daredevil", "Deadpool", "Elsa Bloodstone", "Hawkeye", "Hela", "Human Torch", "Iron Fist", "Iron Man", "Magik"
-											"Mister Fantastic", "Moon Knight", "Namor", "Phoenix", "Psylocke", "Scarlet Witch", "Spider-Man", "Squirrel Girl", "Star-Lord", "Storm", "The Punisher",
-											  "Winter Soldier", "Wolverine" };
-				int i = rand() % std::size(duelist);
-				last = character;
-				character = duelist[i];
-
-				if (character != last) {
-					break;
-				}
-			}
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Strategist")) {
-			marvel = 1;
-			while (true) {
-
-				std::string duelist[] = { "White Fox", "Luna Snow", "Gambit", "Deadpool", "Invisible Woman", "Jeff the Land Shark", "Cloak & Dagger", "Adam Warlock" };
-				int i = rand() % std::size(duelist);
-				last = character;
-				character = duelist[i];
-
-				if (character != last) {
-					break;
-				}
-			}
-		}
-
-		if (character != "") {
-
-			ImGui::Text(character.c_str());
-			ImGui::Text("Do you want to reroll your character?");
-		}
-		if (ImGui::Button("Back to Main Menu")) {
-			game = -1;
-		}
+	ImGui::SameLine();
+	if (ImGui::Button("Duelist")) {
+		marvel = 1;
+			std::string duelist[] = { "Black Cat", "Black Panther", "Black Widow", "Blade", "Daredevil", "Deadpool", "Elsa Bloodstone", "Hawkeye", "Hela", "Human Torch", "Iron Fist", "Iron Man", "Magik"
+										"Mister Fantastic", "Moon Knight", "Namor", "Phoenix", "Psylocke", "Scarlet Witch", "Spider-Man", "Squirrel Girl", "Star-Lord", "Storm", "The Punisher",
+										  "Winter Soldier", "Wolverine" };
+			reroll(duelist);
 	}
-	else if (game == 2) {
+	ImGui::SameLine();
+	if (ImGui::Button("Strategist")) {
+		marvel = 1;
+		std::string strategist[] = { "White Fox", "Luna Snow", "Gambit", "Deadpool", "Invisible Woman", "Jeff the Land Shark", "Cloak & Dagger", "Adam Warlock" };
+		reroll(strategist);
+	}
+
+	if (character != "") {
+
+		ImGui::Text(character.c_str());
+		ImGui::Text("Do you want to reroll your character?");
+	}
+	main_menu();
+}
+else if (game == 2) {
 		ImGui::Text("Which side are you on?");
 
 		if (ImGui::Button("Attackers")) {
-			while (true) {
 				std::string attack[] = { "Solid Snake", "Striker", "Rauora", "Deimos", "Ram", "Brava", "Grim", "Sens", "Osa", "Flores", "Zero", "Ace", "Iana", "Kali", "Amaru", "Nokk", "Gridlock", "Nomad",
 											"Maverick", "Lion", "Finka", "Dokkaebi", "Zofia", "Ying", "Jackal", "Hibana", "Capitao", "Blackbeard", "Buck", "Sledge", "Thatcher", "Ash", "Thermite", "Montagne",
 												"Twitch", "Blitz", "IQ", "Fuze", "Glaz" };
-				int i = rand() % std::size(attack);
-				last = character;
-				character = attack[i];
-
-				if (character != last) {
-					break;
-				}
-			}
+				reroll(attack);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Defenders")) {
-			while (true) {
 				std::string defend[] = { "Denari", "Skopos", "Sentry", "Tubarao", "Fenrir", "Solis", "Azami", "Thorn", "Thunderbird", "Aruni", "Melusi", "Oryx", "Wamai", "Goyo", "Warden", "Mozzie", "Kaid",
 											"Clash", "Maestro", "Alibi", "Vigil", "Ela", "Lesion", "Mira", "Echo", "Caveira", "Valkyrie", "Frost", "Mute", "Smoke", "Castle", "Pulse", "Doc", "Rook", "Jager",
 												"Bandit", "Tachanka", "Kapkan" };
-				int i = rand() % std::size(defend);
-				last = character;
-				character = defend[i];
-
-				if (character != last) {
-					break;
-				}
-			}
+				reroll(defend);
 		}
 		if (character != "") {
 
 			ImGui::Text(character.c_str());
 			ImGui::Text("Do you want to reroll your operator?");
 		}
-		if (ImGui::Button("Back to Main Menu")) {
-			game = -1;
-		}
+		main_menu();
 
 	}
 	else if (game == 3) {
 		ImGui::Text("Click button to roll random class");
 		if (ImGui::Button("Vanilla")) {
-			while (true) {
-				std::string vanilla[] = { "Ranger", "Mage", "Summoner", "Melee" };
-				int i = rand() % std::size(vanilla);
-				last = character;
-				character = vanilla[i];
-
-				if (character != last) {
-					break;
-			
+			std::string vanilla[] = { "Ranger", "Mage", "Summoner", "Melee" };
+			reroll(vanilla);
 		}
-				}
-			}
 		if (character != "") {
 
 			ImGui::Text(character.c_str());
 			ImGui::Text("Do you want to reroll your class?");
 		}
-		if (ImGui::Button("Back to Main Menu")) {
-			game = -1;
-		}
+		main_menu();
 	}
 
 
 	ImGui::End();
+}
+
+void reroll(std::span<std::string> vanilla) {
+
+	while (true) {
+
+		
+		int i = rand() % std::size(vanilla);
+		last = character;
+		character = vanilla[i];
+
+		if (character != last) {
+			break;
+		}
+	}
+}
+
+void main_menu() {
+	if (ImGui::Button("Back to Main Menu")) {
+		game = -1;
+	}
 }
