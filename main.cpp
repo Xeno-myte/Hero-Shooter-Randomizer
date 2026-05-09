@@ -12,16 +12,6 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <span>
 
-void sup();
-void DPS();
-void tank();
-
-void apex();
-
-void vanguard();
-void duelist();
-void strategist();
-
 void main_menu();
 void reroll(std::span<std::string> vanilla);
 
